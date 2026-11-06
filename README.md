@@ -74,30 +74,43 @@ This project builds on a separate SLAM and navigation setup using a custom Gazeb
 
 ## Setup and run
 
-The [setup and reproduction guide](docs/setup.md) includes the prerequisites, checks, and full procedure. The short version is to use CycloneDDS, patch the robot model, build `turtlebot3_gazebo`, and create a Nav2 parameter file with the range layer:
+You will need Ubuntu 22.04, ROS 2 Humble, Gazebo Classic 11, TurtleBot3 Waffle packages built from source in `~/turtlebot3_ws`, Nav2, a saved map, and a Gazebo world. The full [setup guide](docs/setup.md) walks through each step, including localisation, placing the test box, and running the LiDAR-only comparison.
+
+Clone this repository and run the preparation commands from its root:
 
 ```bash
+REPO_DIR="$PWD"
+source /opt/ros/humble/setup.bash
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export TURTLEBOT3_MODEL=waffle
 
 python3 scripts/configure_camera.py
 python3 scripts/add_range_sensor.py
-cd ~/turtlebot3_ws && colcon build --packages-select turtlebot3_gazebo && source install/setup.bash
+cd ~/turtlebot3_ws
+colcon build --packages-select turtlebot3_gazebo
+source install/setup.bash
 
+cd "$REPO_DIR"
 mkdir -p ~/nav2_params
 cp /opt/ros/humble/share/turtlebot3_navigation2/param/humble/waffle.yaml ~/nav2_params/waffle.yaml
 python3 scripts/add_range_layer.py ~/nav2_params/waffle.yaml ~/nav2_params/waffle_range.yaml
 ```
 
-Launch the world, transform, and Nav2 in separate terminals:
+Open separate terminals for the following launches. In each, source ROS, set `RMW_IMPLEMENTATION=rmw_cyclonedds_cpp` and `TURTLEBOT3_MODEL=waffle`, then source `~/turtlebot3_ws/install/setup.bash`:
 
 ```bash
+# Terminal 1: replace with your Gazebo world launch file
 ros2 launch turtlebot3_gazebo <your_world>.launch.py
+
+# Terminal 2: from the root of this repository
 ros2 launch launch/range_sensor_tf.launch.py
+
+# Terminal 3: replace with the path to your saved map
 ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True \
   map:=<path/to/map.yaml> params_file:=$HOME/nav2_params/waffle_range.yaml
 ```
 
-Spawn `models/low_box.sdf` in front of the robot, set the initial pose in RViz, and send a goal beyond the box. Follow [the obstacle test procedure](docs/setup.md#7-compare-the-two-configurations) for the baseline run.
+In RViz, set the robot's initial pose, place `models/low_box.sdf` in front of it using the coordinate conversion in the [setup guide](docs/setup.md#6-place-the-low-box), then send a goal beyond the box. For the LiDAR-only baseline, follow [the comparison procedure](docs/setup.md#7-run-the-demonstration). Each new terminal needs the same ROS environment setup; see the full guide for exact commands and checks.
 
 ## The obstacle demonstration
 

@@ -43,7 +43,7 @@ The stock Waffle camera renders at 1920x1080 and 30 Hz with a 300 m far clip. I 
 
 **Cause:** The Nav2 map frame and Gazebo world frame are offset by a constant shift. Coordinates selected in RViz are map coordinates, while `spawn_entity.py` and `gz model` use Gazebo coordinates. Using Gazebo coordinates for `/initialpose` also placed the robot outside the map.
 
-**Fix:** Measure the offset as described in [step 6 of the setup guide](setup.md#6-place-the-obstacle), then convert coordinates with `scripts/map_to_gazebo.py`. Give AMCL map coordinates and Gazebo commands Gazebo coordinates.
+**Fix:** Measure the offset as described in [step 6 of the setup guide](setup.md#6-place-the-low-box), then convert coordinates with `scripts/map_to_gazebo.py`. Give AMCL map coordinates and Gazebo commands Gazebo coordinates.
 
 ## The obstacle appears in the local costmap, but the robot still collides
 
