@@ -1,0 +1,13 @@
+# ROS 2 / colcon build artefacts
+build/
+install/
+log/
+
+# Backups and caches
+*.bak
+*.bak2
+__pycache__/
+*.pyc
+
+# Temporary captures
+*.ppm

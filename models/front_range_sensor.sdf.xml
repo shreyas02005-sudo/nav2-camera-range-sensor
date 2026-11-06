@@ -1,0 +1,43 @@
+<!--
+  Reference copy of the block that scripts/add_range_sensor.py inserts into the
+  TurtleBot3 waffle model.sdf, just before the closing </model> tag.
+
+  Mounted at the front of the base, 4 cm above the floor plane of base_link,
+  so it covers obstacles that the LiDAR scan plane passes over.
+  Publishes sensor_msgs/Range on /front_range.
+-->
+<link name="front_range_link">
+  <pose>0.08 0 0.04 0 0 0</pose>
+  <inertial>
+    <mass>0.01</mass>
+    <inertia><ixx>1e-6</ixx><iyy>1e-6</iyy><izz>1e-6</izz></inertia>
+  </inertial>
+  <sensor name="front_range" type="ray">
+    <always_on>true</always_on>
+    <update_rate>10</update_rate>
+    <visualize>true</visualize>
+    <ray>
+      <scan>
+        <horizontal>
+          <samples>5</samples><resolution>1</resolution>
+          <min_angle>-0.2</min_angle><max_angle>0.2</max_angle>
+        </horizontal>
+        <vertical>
+          <samples>1</samples><resolution>1</resolution>
+          <min_angle>0</min_angle><max_angle>0</max_angle>
+        </vertical>
+      </scan>
+      <range><min>0.02</min><max>1.5</max><resolution>0.01</resolution></range>
+    </ray>
+    <plugin name="front_range_plugin" filename="libgazebo_ros_ray_sensor.so">
+      <ros><remapping>~/out:=front_range</remapping></ros>
+      <output_type>sensor_msgs/Range</output_type>
+      <radiation_type>ultrasound</radiation_type>
+      <frame_name>front_range_link</frame_name>
+    </plugin>
+  </sensor>
+</link>
+<joint name="front_range_joint" type="fixed">
+  <parent>base_link</parent>
+  <child>front_range_link</child>
+</joint>

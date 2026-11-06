@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+  Low test obstacle: 20 cm x 20 cm footprint, 8 cm tall.
+  It sits below the TurtleBot3 LiDAR scan plane, so only the front range
+  sensor can detect it.
+-->
+<sdf version="1.6">
+  <model name="low_box">
+    <static>true</static>
+    <link name="link">
+      <collision name="collision">
+        <geometry><box><size>0.2 0.2 0.08</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>0.2 0.2 0.08</size></box></geometry>
+        <material>
+          <ambient>1 0.3 0 1</ambient>
+          <diffuse>1 0.3 0 1</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>
