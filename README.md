@@ -1,46 +1,119 @@
-# TurtleBot3 Nav2: Camera and Range Sensor Integration
+# TurtleBot3 Nav2 Camera and Range Sensor Integration
 
-Adding an RGB camera feed and a low-mounted range sensor to a TurtleBot3 Waffle in Gazebo Classic, wiring the range sensor into the Nav2 costmaps, and checking that it changes how the robot navigates.
+![ROS 2](https://img.shields.io/badge/ROS%202-Humble-22314E)
+![Nav2](https://img.shields.io/badge/Nav2-Navigation2-blue)
+![Gazebo](https://img.shields.io/badge/Gazebo-Classic%2011-orange)
+![Robot](https://img.shields.io/badge/Robot-TurtleBot3%20Waffle-lightgrey)
+![Platform](https://img.shields.io/badge/Ubuntu-22.04%20%7C%20WSL2-E95420)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-The test is simple on purpose. An 8 cm tall box sits on the robot's route, below the height of the LiDAR scan. With the range sensor in the costmap, Nav2 plans around the box. Without it, the robot drives straight into it.
+I added a camera and a low-mounted range sensor to a TurtleBot3 Waffle in Gazebo Classic, then connected the range sensor to Nav2's costmaps. The project explores how a sensor below the LiDAR scan plane can help a robot detect and navigate around a low obstacle.
 
-This builds on a separate SLAM and navigation setup: a custom Gazebo world, a Cartographer map and Nav2 navigation through it. If you want to reproduce this repository you need a working Nav2 setup of your own to run it on, as described under [Requirements](#requirements).
+**[Watch the two test runs](https://drive.google.com/drive/folders/1_qsFUcDb3oPudGYDkgD9RKODOBYeF5Z4?usp=sharing)**
 
-## Results
-
-| Configuration | Obstacle in costmap | Outcome |
-|---|---|---|
-| Stock Nav2 parameters (LiDAR only) | No | Robot did not see the box and collided with it |
-| Nav2 with the range sensor layer | Yes (local and global) | Planner routed around the box |
-
-Recordings of both runs are in this [Google Drive folder](https://drive.google.com/drive/folders/1_qsFUcDb3oPudGYDkgD9RKODOBYeF5Z4?usp=sharing).
-
-The camera feed from the robot in the simulated world, received over ROS 2 at 640x480:
+The camera feed below was received over ROS 2 at 640x480.
 
 ![Camera view from the TurtleBot3 in Gazebo](docs/images/nav2_camera.jpeg)
 
-These results come from a single obstacle layout in one world, repeated for the two configurations with the same start pose, goal and box position. It shows the mechanism working. It is not a statistical benchmark.
+---
 
-## What was built
+## Contents
 
-**Camera.** The stock Waffle model already includes a camera, but it renders 1920x1080 at 30 Hz with a 300 m far clip, which is a lot to ask of a simulator running under WSL2. It is reduced to 640x480 at 10 Hz with a 10 m far clip, which is plenty for colour-based detection. It publishes `/camera/image_raw` and `/camera/camera_info`. Getting the images to actually arrive in ROS was a separate problem, solved by changing the DDS middleware (see below).
+- [What it does](#what-it-does)
+- [How it fits together](#how-it-fits-together)
+- [Tested environment](#tested-environment)
+- [Setup and run](#setup-and-run)
+- [The obstacle demonstration](#the-obstacle-demonstration)
+- [Repository layout](#repository-layout)
+- [Troubleshooting](#troubleshooting)
+- [What this project shows](#what-this-project-shows)
+- [Limitations and next steps](#limitations-and-next-steps)
+- [Acknowledgements](#acknowledgements)
+- [License](#license)
 
-**Range sensor.** A narrow, five-ray sensor mounted at the front of the base, 4 cm above the base link origin. It publishes `sensor_msgs/Range` on `/front_range` with a 1.5 m maximum range and a 0.4 rad field of view. Its height is deliberate: the LiDAR plane passes over low obstacles, and this sensor does not.
+---
 
-**Costmap integration.** The `nav2_costmap_2d::RangeSensorLayer` plugin consumes `/front_range` in both the local and the global costmap. Adding it to the global costmap matters, because otherwise the planner keeps proposing paths through the box and only the local controller knows about it.
+## What it does
 
-**Transform.** The range link is part of the Gazebo model but not of the URDF that `robot_state_publisher` uses, so a static transform from `base_link` to `front_range_link` is published separately.
+- Adds a **front-mounted, low range sensor** to a TurtleBot3 Waffle in Gazebo Classic.
+- Feeds the range data into **both Nav2 costmaps**, so the local controller and global planner can account for low obstacles.
+- Resizes the robot camera and publishes images on `/camera/image_raw` and camera calibration data on `/camera/camera_info`.
+- Demonstrates the difference between stock LiDAR-only parameters and Nav2 configured with the range sensor layer.
+
+| Configuration | Obstacle in costmap | Recorded outcome |
+|---|---|---|
+| Stock Nav2 parameters (LiDAR only) | No | The robot did not detect the box and collided with it. |
+| Nav2 with the range sensor layer | Yes (local and global costmaps) | The planner routed around the box. |
+
+This is a qualitative demonstration from one obstacle layout, not a controlled benchmark. The available results do not establish that the start pose, goal, and box position were identical between runs.
+
+## How it fits together
+
+```mermaid
+flowchart LR
+    G["Gazebo Classic<br/>TurtleBot3 Waffle + low box"] -->|"/scan, /front_range"| N["Nav2<br/>local + global costmaps"]
+    G -->|"/camera/image_raw"| C["ROS 2 camera feed"]
+    T["Static transform<br/>base_link → front_range_link"] --> N
+    M["Saved map"] --> N
+    N -->|"/cmd_vel"| G
+    R["RViz 2<br/>initial pose + goal"] <--> N
+```
+
+The range sensor is mounted 4 cm above the base link origin. Its five-ray scan has a 0.4 rad field of view and 1.5 m maximum range. The static transform is launched separately because the range link is present in the Gazebo model but not the URDF used by `robot_state_publisher`.
+
+## Tested environment
+
+- Ubuntu 22.04 under WSL2, ROS 2 Humble, Gazebo Classic 11 with `gazebo_ros_pkgs`
+- TurtleBot3 Waffle packages built from source in `~/turtlebot3_ws` so the model can be edited
+- Nav2 (`navigation2`, `nav2_bringup`) and `turtlebot3_navigation2`
+- CycloneDDS (`ros-humble-rmw-cyclonedds-cpp`)
+- A saved map and a Gazebo world for navigation
+
+This project builds on a separate SLAM and navigation setup using a custom Gazebo world and a Cartographer map. You will need a working Nav2 setup of your own; see the [setup guide](docs/setup.md).
+
+## Setup and run
+
+The [setup and reproduction guide](docs/setup.md) includes the prerequisites, checks, and full procedure. The short version is to use CycloneDDS, patch the robot model, build `turtlebot3_gazebo`, and create a Nav2 parameter file with the range layer:
+
+```bash
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+python3 scripts/configure_camera.py
+python3 scripts/add_range_sensor.py
+cd ~/turtlebot3_ws && colcon build --packages-select turtlebot3_gazebo && source install/setup.bash
+
+mkdir -p ~/nav2_params
+cp /opt/ros/humble/share/turtlebot3_navigation2/param/humble/waffle.yaml ~/nav2_params/waffle.yaml
+python3 scripts/add_range_layer.py ~/nav2_params/waffle.yaml ~/nav2_params/waffle_range.yaml
+```
+
+Launch the world, transform, and Nav2 in separate terminals:
+
+```bash
+ros2 launch turtlebot3_gazebo <your_world>.launch.py
+ros2 launch launch/range_sensor_tf.launch.py
+ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True \
+  map:=<path/to/map.yaml> params_file:=$HOME/nav2_params/waffle_range.yaml
+```
+
+Spawn `models/low_box.sdf` in front of the robot, set the initial pose in RViz, and send a goal beyond the box. Follow [the obstacle test procedure](docs/setup.md#7-compare-the-two-configurations) for the baseline run.
+
+## The obstacle demonstration
+
+The test box is 8 cm tall, below the LiDAR scan plane. With the range layer in both costmaps, the planner routed around it in the recorded run. In the baseline run with stock Nav2 parameters, the robot did not detect it and collided with it. Recordings of both runs are linked at the top of this README.
+
+The procedure describes how to repeat the test with the same start pose, goal, and box position. The original recordings do not establish that these positions were identical, so treat the comparison as a demonstration rather than a controlled experiment.
 
 ## Repository layout
 
-```
+```text
 .
 ├── config/
 │   └── range_layer.yaml            Costmap layer settings (reference copy)
 ├── docs/
 │   ├── setup.md                    Step-by-step reproduction guide
-│   ├── troubleshooting.md          Problems hit during development and their fixes
-│   └── images/                     Screenshots used in this README
+│   ├── troubleshooting.md          Common issues and fixes
+│   └── images/                     README screenshots
 ├── launch/
 │   └── range_sensor_tf.launch.py   Static transform for the range sensor
 ├── models/
@@ -51,73 +124,39 @@ These results come from a single obstacle layout in one world, repeated for the 
     ├── add_range_sensor.py         Insert the range sensor into model.sdf
     ├── add_range_layer.py          Add the range layer to a Nav2 params file
     ├── map_to_gazebo.py            Convert map coordinates to Gazebo coordinates
-    ├── grab_frame.py               Save one camera frame and print pixel statistics
-    └── clean_gz.sh                 Kill stale Gazebo/ROS processes before launching
+    ├── grab_frame.py               Save a camera frame and print pixel statistics
+    └── clean_gz.sh                 Stop stale Gazebo/ROS processes before launching
 ```
 
-The scripts patch the TurtleBot3 model and the stock Nav2 parameters in place, instead of shipping modified copies. That keeps the repository small and makes every change visible and repeatable.
+The scripts patch the TurtleBot3 model and Nav2 parameters in place rather than shipping modified copies. Reference snippets are available in `models/` and `config/`.
 
-## Requirements
+## Troubleshooting
 
-- Ubuntu 22.04 (tested under WSL2)
-- ROS 2 Humble
-- Gazebo Classic 11 with `gazebo_ros_pkgs`
-- TurtleBot3 packages, with `TURTLEBOT3_MODEL=waffle`, built from source in `~/turtlebot3_ws` so the model file can be edited
-- Nav2 (`navigation2`, `nav2_bringup`) and `turtlebot3_navigation2`
-- `ros-humble-rmw-cyclonedds-cpp`
-- A saved map and a Gazebo world to navigate in
+- **Camera topics appear but images do not arrive.** Use CycloneDDS in every terminal, including Gazebo. Details and diagnostic steps are in the [troubleshooting guide](docs/troubleshooting.md).
+- **The installed robot model does not reflect your changes.** Gazebo loads the model from `install/`; check the installed copy after building.
+- **The obstacle appears in the wrong place.** Convert between map and Gazebo coordinates using the measured frame offset.
+- **The robot sees the obstacle locally but still collides.** Confirm that the range layer is configured in both costmaps.
 
-## Quick start
+See [`docs/troubleshooting.md`](docs/troubleshooting.md) for the fixes and commands.
 
-The full walkthrough, including checks after each step, is in [docs/setup.md](docs/setup.md). In short:
+## What this project shows
 
-```bash
-# 1. Use CycloneDDS (needed for the camera images to reach ROS under WSL2)
-export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+- **Nav2 integration:** connecting a new sensor to the local and global costmaps.
+- **Robot model modification:** patching a TurtleBot3 Gazebo model and rebuilding its package.
+- **Coordinate frames:** publishing the sensor transform and handling offsets between map and Gazebo frames.
+- **Simulation debugging:** diagnosing large camera-message delivery under WSL2 and selecting CycloneDDS.
+- **Reproducible testing:** providing scripts, model snippets, and a procedure for comparing sensor configurations.
 
-# 2. Patch the robot model
-python3 scripts/configure_camera.py
-python3 scripts/add_range_sensor.py
-cd ~/turtlebot3_ws && colcon build --packages-select turtlebot3_gazebo && source install/setup.bash
+## Limitations and next steps
 
-# 3. Create Nav2 parameters that include the range layer
-mkdir -p ~/nav2_params
-cp /opt/ros/humble/share/turtlebot3_navigation2/param/humble/waffle.yaml ~/nav2_params/waffle.yaml
-python3 scripts/add_range_layer.py ~/nav2_params/waffle.yaml ~/nav2_params/waffle_range.yaml
+- Sensor readings are simulated and noise-free; a physical sensor would need threshold tuning.
+- The 0.4 rad range cone is narrow, so an off-axis low obstacle may not be detected until the robot turns toward it.
+- The demonstration covers one world and obstacle layout and is not a statistical benchmark.
+- The camera feed is published but not yet processed. Next steps include colour-based detection using the camera intrinsics, using detections for navigation goals, and repeating the obstacle test in Isaac Sim.
 
-# 4. Launch (one terminal each)
-ros2 launch turtlebot3_gazebo <your_world>.launch.py
-ros2 launch launch/range_sensor_tf.launch.py
-ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True \
-  map:=<path/to/map.yaml> params_file:=$HOME/nav2_params/waffle_range.yaml
-```
+## Acknowledgements
 
-Then spawn `models/low_box.sdf` in front of the robot, set the initial pose in RViz, and send a goal beyond the box.
-
-## Design notes
-
-**Why a separate low sensor?** The point of the experiment is to show a gap in LiDAR-only navigation and a cheap way to close it. A low, narrow range sensor is a reasonable stand-in for a bumper-height ultrasonic or time-of-flight sensor on a real robot.
-
-**Why the range layer in both costmaps?** The local costmap drives the controller, and the global costmap drives the planner. With the layer only in the local costmap the robot can see the box but still tends to follow a global path through it.
-
-**Why CycloneDDS?** With the default Fast DDS the small LiDAR messages arrived normally, but the roughly 0.9 MB camera images did not. Switching the middleware fixed this. See the troubleshooting guide for how the problem was narrowed down.
-
-## Known limitations
-
-- The sensor is simulated, so the readings are noise-free. A real sensor would need tuning of the layer's thresholds.
-- The range cone is narrow (0.4 rad). Obstacles that are off-axis and low may not be seen until the robot turns toward them.
-- Tested in one world with one obstacle layout.
-- The camera feed is published but not yet processed. Object detection on this feed is the next step.
-
-## Next steps
-
-- Colour-based object detection on `/camera/image_raw`, using the published camera intrinsics.
-- Using detections for navigation goals.
-- Repeating the obstacle test in Isaac Sim.
-
-## Author
-
-Shreyas R, B.E. Electronics and Instrumentation Engineering, M.S. Ramaiah Institute of Technology. GitHub: [shreyas02005-sudo](https://github.com/shreyas02005-sudo)
+Built with [TurtleBot3](https://emanual.robotis.com/docs/en/platform/turtlebot3/overview/), [Nav2](https://docs.nav2.org/), [ROS 2](https://docs.ros.org/), and [Gazebo Classic](https://classic.gazebosim.org/).
 
 ## License
 
