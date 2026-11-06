@@ -1,0 +1,11 @@
+# Costmap layer that consumes the front range sensor.
+# scripts/add_range_layer.py inserts this block (and the plugin name) into both
+# the local and global costmap sections of a copy of the stock TurtleBot3
+# waffle Nav2 parameters. Shown here for reference.
+range_layer:
+  plugin: "nav2_costmap_2d::RangeSensorLayer"
+  topics: ["/front_range"]
+  phi: 1.2
+  clear_threshold: 0.46
+  mark_threshold: 0.98
+  clear_on_max_reading: True
