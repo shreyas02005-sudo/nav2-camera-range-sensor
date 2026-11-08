@@ -9,7 +9,7 @@
 [![CI](https://github.com/shreyas02005-sudo/nav2-camera-range-sensor/actions/workflows/ci.yml/badge.svg)](https://github.com/shreyas02005-sudo/nav2-camera-range-sensor/actions/workflows/ci.yml)
 ![Params patch](https://github.com/shreyas02005-sudo/nav2-camera-range-sensor/actions/workflows/params-patch.yml/badge.svg)
 
-I added a camera and a low-mounted range sensor to a TurtleBot3 Waffle in Gazebo Classic, connected the range sensor to Nav2's costmaps, and built a colour-based perception demo that detects and follows simulated boxes.
+I added a camera and a low mounted range sensor to a TurtleBot3 Waffle in Gazebo Classic, connected the range sensor to Nav2's costmaps, and built a colour based perception demo that detects and follows simulated boxes.
 
 **[Open the demo videos on Google Drive](https://drive.google.com/drive/folders/1_qsFUcDb3oPudGYDkgD9RKODOBYeF5Z4?usp=sharing):** range-sensor navigation, box detection, and colour-box following.
 
@@ -30,7 +30,7 @@ The camera feed below was received over ROS 2 at 640x480.
 - [Tested environment](#tested-environment)
 - [Setup and run](#setup-and-run)
 - [The obstacle demonstration](#the-obstacle-demonstration)
-- [Colour-box perception and following](#colour-box-perception-and-following)
+- [Colour box perception and following](#colour-box-perception-and-following)
 - [Repository layout](#repository-layout)
 - [Troubleshooting](#troubleshooting)
 - [What this project shows](#what-this-project-shows)
@@ -43,12 +43,12 @@ The camera feed below was received over ROS 2 at 640x480.
 
 ## What it does
 
-- Adds a **front-mounted, low range sensor** to a TurtleBot3 Waffle in Gazebo Classic.
+- Adds a **front mounted, low range sensor** to a TurtleBot3 Waffle in Gazebo Classic.
 - Feeds the range data into **both Nav2 costmaps**, so the local controller and global planner can account for low obstacles.
 - Resizes the robot camera and publishes images on `/camera/image_raw` and camera calibration data on `/camera/camera_info`.
 - Detects red, green, and blue boxes from the camera feed and publishes their estimated bearing and distance.
 - Follows a selected colour with a simple velocity controller in the simulation.
-- Demonstrates the difference between stock LiDAR-only parameters and Nav2 configured with the range sensor layer.
+- Demonstrates the difference between stock LiDAR only parameters and Nav2 configured with the range sensor layer.
 
 | Configuration | Obstacle in costmap | Recorded outcome |
 |---|---|---|
@@ -72,13 +72,13 @@ flowchart LR
     R["RViz 2<br/>initial pose + goal"] <--> N
 ```
 
-The range sensor is mounted 4 cm above the base link origin. Its five-ray scan has a 0.4 rad field of view and 1.5 m maximum range. The static transform is launched separately because the range link is present in the Gazebo model but not the URDF used by `robot_state_publisher`.
+The range sensor is mounted 4 cm above the base link origin. Its five ray scan has a 0.4 rad field of view and 1.5 m maximum range. The static transform is launched separately because the range link is present in the Gazebo model but not the URDF used by `robot_state_publisher`.
 
 ![Side view of the robot, the LiDAR scan plane and the low box](docs/images/sensor-geometry.svg)
 
 *Side view, not to scale. The LiDAR plane passes over the box, but the low range sensor does not.*
 
-The design notes in [`docs/how-it-works.md`](docs/how-it-works.md) go through the data path, the frames and the trade-offs.
+The design notes in [`docs/how-it-works.md`](docs/how-it-works.md) go through the data path, the frames and the trade offs.
 
 ## Tested environment
 
@@ -92,7 +92,7 @@ This project builds on a separate SLAM and navigation setup using a custom Gazeb
 
 ## Setup and run
 
-You will need Ubuntu 22.04, ROS 2 Humble, Gazebo Classic 11, TurtleBot3 Waffle packages built from source in `~/turtlebot3_ws`, Nav2, a saved map, and a Gazebo world. The full [setup guide](docs/setup.md) walks through each step, including localisation, placing the test box, and running the LiDAR-only comparison.
+You will need Ubuntu 22.04, ROS 2 Humble, Gazebo Classic 11, TurtleBot3 Waffle packages built from source in `~/turtlebot3_ws`, Nav2, a saved map, and a Gazebo world. The full [setup guide](docs/setup.md) walks through each step, including localisation, placing the test box, and running the LiDAR only comparison.
 
 Clone this repository and run the preparation commands from its root:
 
@@ -128,7 +128,7 @@ ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True \
   map:=<path/to/map.yaml> params_file:=$HOME/nav2_params/waffle_range.yaml
 ```
 
-In RViz, set the robot's initial pose, place `models/low_box.sdf` in front of it using the coordinate conversion in the [setup guide](docs/setup.md#6-place-the-low-box), then send a goal beyond the box. For the LiDAR-only baseline, follow [the comparison procedure](docs/setup.md#7-run-the-demonstration). The additional [perception guide](perception/README.md) explains how to detect and follow coloured boxes. Each new terminal needs the same ROS environment setup; see the full guide for exact commands and checks.
+In RViz, set the robot's initial pose, place `models/low_box.sdf` in front of it using the coordinate conversion in the [setup guide](docs/setup.md#6-place-the-low-box), then send a goal beyond the box. For the LiDAR only baseline, follow [the comparison procedure](docs/setup.md#7-run-the-demonstration). The additional [perception guide](perception/README.md) explains how to detect and follow coloured boxes. Each new terminal needs the same ROS environment setup; see the full guide for exact commands and checks.
 
 ## The obstacle demonstration
 
@@ -214,14 +214,14 @@ See [`docs/troubleshooting.md`](docs/troubleshooting.md) for the fixes and comma
 ## Limitations and next steps
 
 - Sensor readings are simulated and noise-free; a physical sensor would need threshold tuning.
-- The 0.4 rad range cone is narrow, so an off-axis low obstacle may not be detected until the robot turns toward it.
+- The 0.4 rad range cone is narrow, so an off axis low obstacle may not be detected until the robot turns toward it.
 - The demonstration covers one world and obstacle layout and is not a statistical benchmark.
-- The perception pipeline is colour-based and tuned to static simulation lighting; similarly coloured objects can be mistaken for the test targets.
+- The perception pipeline is colour based and tuned to static simulation lighting; similarly coloured objects can be mistaken for the test targets.
 - The follower drives directly toward a target and does not avoid obstacles. Connecting its detections to Nav2 is a next step, along with repeating the navigation test in Isaac Sim.
 
 ## Related project
 
-This builds on my [TurtleBot3 + Nav2 demo](https://github.com/shreyas02005-sudo/tb3_nav2_demo), which has the custom three-room Gazebo world and the Cartographer map I used as the test environment.
+This builds on my [TurtleBot3 + Nav2 demo](https://github.com/shreyas02005-sudo/tb3_nav2_demo), which has the custom three room Gazebo world and the Cartographer map I used as the test environment.
 
 ## Acknowledgements
 
