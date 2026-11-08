@@ -11,7 +11,7 @@
 
 I added a camera and a low mounted range sensor to a TurtleBot3 Waffle in Gazebo Classic, connected the range sensor to Nav2's costmaps, and built a colour based perception demo that detects and follows simulated boxes.
 
-**[Open the demo videos on Google Drive](https://drive.google.com/drive/folders/1_qsFUcDb3oPudGYDkgD9RKODOBYeF5Z4?usp=sharing):** range-sensor navigation, box detection, and colour-box following.
+**[Open the demo videos on Google Drive](https://drive.google.com/drive/folders/1_qsFUcDb3oPudGYDkgD9RKODOBYeF5Z4?usp=sharing):** range sensor navigation, box detection, and colour box following.
 
 | LiDAR only (stock Nav2) | With the range sensor layer |
 |:--:|:--:|
