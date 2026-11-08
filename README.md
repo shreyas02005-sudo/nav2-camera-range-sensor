@@ -13,6 +13,10 @@ I added a camera and a low-mounted range sensor to a TurtleBot3 Waffle in Gazebo
 
 **[Open the demo videos on Google Drive](https://drive.google.com/drive/folders/1_qsFUcDb3oPudGYDkgD9RKODOBYeF5Z4?usp=sharing):** range-sensor navigation, box detection, and colour-box following.
 
+| LiDAR only (stock Nav2) | With the range sensor layer |
+|:--:|:--:|
+| ![Stock Nav2 run: the robot drives into the box](docs/images/stock-nav2.gif) | ![Range layer run: the robot routes around the box](docs/images/range-layer.gif) |
+
 The camera feed below was received over ROS 2 at 640x480.
 
 ![Camera view from the TurtleBot3 in Gazebo](docs/images/nav2_camera.jpeg)
