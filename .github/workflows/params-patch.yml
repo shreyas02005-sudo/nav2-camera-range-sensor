@@ -1,0 +1,34 @@
+name: params-patch
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  patch-test:
+    name: Patch stock Nav2 params (ROS 2 Humble)
+    runs-on: ubuntu-22.04
+    container:
+      image: ros:humble-ros-base
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Install the stock TurtleBot3 Nav2 parameters
+        shell: bash
+        run: |
+          apt-get update
+          apt-get install -y ros-humble-turtlebot3-navigation2 python3-yaml
+
+      - name: Add the range layer to the stock Waffle params
+        shell: bash
+        run: |
+          python3 scripts/add_range_layer.py \
+            /opt/ros/humble/share/turtlebot3_navigation2/param/humble/waffle.yaml \
+            /tmp/waffle_range.yaml
+
+      - name: Check the range layer is in both costmaps
+        shell: bash
+        run: python3 scripts/check_range_layer.py /tmp/waffle_range.yaml
