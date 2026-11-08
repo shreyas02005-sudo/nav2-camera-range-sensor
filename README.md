@@ -8,9 +8,9 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 [![CI](https://github.com/shreyas02005-sudo/nav2-camera-range-sensor/actions/workflows/ci.yml/badge.svg)](https://github.com/shreyas02005-sudo/nav2-camera-range-sensor/actions/workflows/ci.yml)
 
-I added a camera and a low-mounted range sensor to a TurtleBot3 Waffle in Gazebo Classic, then connected the range sensor to Nav2's costmaps. The project explores how a sensor below the LiDAR scan plane can help a robot detect and navigate around a low obstacle.
+I added a camera and a low-mounted range sensor to a TurtleBot3 Waffle in Gazebo Classic, connected the range sensor to Nav2's costmaps, and built a colour-based perception demo that detects and follows simulated boxes.
 
-**[Watch the two test runs](https://drive.google.com/drive/folders/1_qsFUcDb3oPudGYDkgD9RKODOBYeF5Z4?usp=sharing)**
+**[Open the demo videos on Google Drive](https://drive.google.com/drive/folders/1_qsFUcDb3oPudGYDkgD9RKODOBYeF5Z4?usp=sharing):** range-sensor navigation, box detection, and colour-box following.
 
 The camera feed below was received over ROS 2 at 640x480.
 
@@ -25,6 +25,7 @@ The camera feed below was received over ROS 2 at 640x480.
 - [Tested environment](#tested-environment)
 - [Setup and run](#setup-and-run)
 - [The obstacle demonstration](#the-obstacle-demonstration)
+- [Colour-box perception and following](#colour-box-perception-and-following)
 - [Repository layout](#repository-layout)
 - [Troubleshooting](#troubleshooting)
 - [What this project shows](#what-this-project-shows)
@@ -39,6 +40,8 @@ The camera feed below was received over ROS 2 at 640x480.
 - Adds a **front-mounted, low range sensor** to a TurtleBot3 Waffle in Gazebo Classic.
 - Feeds the range data into **both Nav2 costmaps**, so the local controller and global planner can account for low obstacles.
 - Resizes the robot camera and publishes images on `/camera/image_raw` and camera calibration data on `/camera/camera_info`.
+- Detects red, green, and blue boxes from the camera feed and publishes their estimated bearing and distance.
+- Follows a selected colour with a simple velocity controller in the simulation.
 - Demonstrates the difference between stock LiDAR-only parameters and Nav2 configured with the range sensor layer.
 
 | Configuration | Obstacle in costmap | Recorded outcome |
@@ -54,6 +57,9 @@ This is a qualitative demonstration from one obstacle layout, not a controlled b
 flowchart LR
     G["Gazebo Classic<br/>TurtleBot3 Waffle + low box"] -->|"/scan, /front_range"| N["Nav2<br/>local + global costmaps"]
     G -->|"/camera/image_raw"| C["ROS 2 camera feed"]
+    C --> D["Colour detector<br/>HSV + camera geometry"]
+    D -->|"/perception/detections"| F["Colour follower<br/>select red, green, or blue"]
+    F -->|"/cmd_vel (run separately)"| G
     T["Static transform<br/>base_link → front_range_link"] --> N
     M["Saved map"] --> N
     N -->|"/cmd_vel"| G
@@ -110,13 +116,21 @@ ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True \
   map:=<path/to/map.yaml> params_file:=$HOME/nav2_params/waffle_range.yaml
 ```
 
-In RViz, set the robot's initial pose, place `models/low_box.sdf` in front of it using the coordinate conversion in the [setup guide](docs/setup.md#6-place-the-low-box), then send a goal beyond the box. For the LiDAR-only baseline, follow [the comparison procedure](docs/setup.md#7-run-the-demonstration). Each new terminal needs the same ROS environment setup; see the full guide for exact commands and checks.
+In RViz, set the robot's initial pose, place `models/low_box.sdf` in front of it using the coordinate conversion in the [setup guide](docs/setup.md#6-place-the-low-box), then send a goal beyond the box. For the LiDAR-only baseline, follow [the comparison procedure](docs/setup.md#7-run-the-demonstration). The additional [perception guide](perception/README.md) explains how to detect and follow coloured boxes. Each new terminal needs the same ROS environment setup; see the full guide for exact commands and checks.
 
 ## The obstacle demonstration
 
 The test box is 8 cm tall, below the LiDAR scan plane. With the range layer in both costmaps, the planner routed around it in the recorded run. In the baseline run with stock Nav2 parameters, the robot did not detect it and collided with it. Recordings of both runs are linked at the top of this README.
 
-The procedure describes how to repeat the test with the same start pose, goal, and box position. The original recordings do not establish that these positions were identical, so treat the comparison as a demonstration rather than a controlled experiment.
+The [Drive folder](https://drive.google.com/drive/folders/1_qsFUcDb3oPudGYDkgD9RKODOBYeF5Z4?usp=sharing) also contains the box-detection and colour-following videos. The procedure describes how to repeat the navigation test with the same start pose, goal, and box position. The original navigation recordings do not establish that these positions were identical, so treat that comparison as a demonstration rather than a controlled experiment.
+
+## Colour-box perception and following
+
+The perception add-on processes the resized camera stream with OpenCV HSV colour masks, contour filtering, and the camera intrinsics. It reports bearing from the box's image position and estimates distance from its known 30 cm height. A separate proportional controller can turn toward a selected red, green, or blue box and approach it.
+
+In the supplied Gazebo comparisons, bearing error was under 1 degree for fully visible boxes at 1.5 to 4 m (most readings were within 0.5 degrees). Height-based distance estimates were within a few centimetres at 1 to 4 m. The follower stopped at roughly 0.475 to 0.479 m in the recorded approaches. These are simulation results, not measurements from a physical robot.
+
+See [`perception/README.md`](perception/README.md) for setup commands, topics, detailed results, and limitations. The existing camera image above is the camera feed used by the perception pipeline.
 
 ## Repository layout
 
@@ -131,6 +145,13 @@ The procedure describes how to repeat the test with the same start pose, goal, a
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                  Python and shell syntax checks
+├── perception/
+│   ├── README.md                   Detection, following, and measured results
+│   ├── color_detector.py           Detect coloured boxes in the camera feed
+│   ├── color_follower.py           Follow a selected box colour
+│   ├── expected_bearing.py         Compare detections with Gazebo ground truth
+│   ├── spawn_boxes.sh              Spawn the perception test boxes
+│   └── models/                     Red, green, and blue box models
 ├── launch/
 │   └── range_sensor_tf.launch.py   Static transform for the range sensor
 ├── models/
@@ -162,6 +183,7 @@ See [`docs/troubleshooting.md`](docs/troubleshooting.md) for the fixes and comma
 - **Robot model modification:** patching a TurtleBot3 Gazebo model and rebuilding its package.
 - **Coordinate frames:** publishing the sensor transform and handling offsets between map and Gazebo frames.
 - **Simulation debugging:** diagnosing large camera-message delivery under WSL2 and selecting CycloneDDS.
+- **Classical perception:** using colour masks and camera geometry to estimate target bearing and distance.
 - **Reproducible testing:** providing scripts, model snippets, and a procedure for comparing sensor configurations.
 
 ## Limitations and next steps
@@ -169,7 +191,8 @@ See [`docs/troubleshooting.md`](docs/troubleshooting.md) for the fixes and comma
 - Sensor readings are simulated and noise-free; a physical sensor would need threshold tuning.
 - The 0.4 rad range cone is narrow, so an off-axis low obstacle may not be detected until the robot turns toward it.
 - The demonstration covers one world and obstacle layout and is not a statistical benchmark.
-- The camera feed is published but not yet processed. Next steps include colour-based detection using the camera intrinsics, using detections for navigation goals, and repeating the obstacle test in Isaac Sim.
+- The perception pipeline is colour-based and tuned to static simulation lighting; similarly coloured objects can be mistaken for the test targets.
+- The follower drives directly toward a target and does not avoid obstacles. Connecting its detections to Nav2 is a next step, along with repeating the navigation test in Isaac Sim.
 
 ## Acknowledgements
 

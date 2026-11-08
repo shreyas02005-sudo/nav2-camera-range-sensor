@@ -24,7 +24,7 @@ jobs:
           python-version: "3.x"
 
       - name: Compile Python scripts
-        run: python -m compileall -q scripts launch
+        run: python -m compileall -q scripts launch perception
 
       - name: Check shell script syntax
-        run: bash -n scripts/clean_gz.sh
+        run: bash -n scripts/clean_gz.sh perception/spawn_boxes.sh

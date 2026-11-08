@@ -184,3 +184,5 @@ python3 scripts/grab_frame.py /tmp/frame.png
 ```
 
 The script prints minimum, maximum, and mean pixel values and saves the image. A mean near zero indicates a black frame. Under WSL2, `rqt_image_view` and `ros2 topic hz` may not reliably display or measure this camera stream; RViz's Image display or this saved frame are better checks. See the [troubleshooting guide](troubleshooting.md).
+
+To run the colour-box detector and follower, continue with the [perception guide](../perception/README.md).
