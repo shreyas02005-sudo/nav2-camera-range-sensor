@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 260" role="img" aria-labelledby="t d">
+  <title id="t">Sensor geometry</title>
+  <desc id="d">Side view of a TurtleBot3 with a LiDAR scan plane passing over a low box, and a low range sensor whose beam hits the box.</desc>
+  <rect width="640" height="260" rx="8" fill="#ffffff" stroke="#d0d7de"/>
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#24292f">
+    <!-- ground -->
+    <line x1="20" y1="210" x2="620" y2="210" stroke="#57606a" stroke-width="2"/>
+    <!-- robot body and LiDAR -->
+    <rect x="60" y="150" width="150" height="60" rx="6" fill="#8c959f"/>
+    <rect x="110" y="128" width="36" height="22" rx="3" fill="#0969da"/>
+    <text x="90" y="118" fill="#0969da">LiDAR</text>
+    <!-- LiDAR scan plane -->
+    <line x1="146" y1="139" x2="610" y2="139" stroke="#0969da" stroke-width="2" stroke-dasharray="8 6"/>
+    <text x="300" y="130" fill="#0969da">LiDAR scan plane (passes over the box)</text>
+    <!-- range beam -->
+    <polygon points="214,195 470,174 470,208" fill="#1a7f37" fill-opacity="0.3"/>
+    <rect x="204" y="190" width="10" height="10" fill="#1a7f37"/>
+    <polyline points="190,232 209,203" fill="none" stroke="#1a7f37" stroke-width="1.5"/>
+    <text x="100" y="246" fill="#1a7f37">Low range sensor</text>
+    <text x="300" y="188" fill="#1a7f37">range beam</text>
+    <!-- box -->
+    <rect x="470" y="170" width="60" height="40" fill="#bf8700" fill-opacity="0.85"/>
+    <text x="474" y="162">8 cm box</text>
+  </g>
+</svg>

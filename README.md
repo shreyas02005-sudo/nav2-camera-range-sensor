@@ -30,6 +30,7 @@ The camera feed below was received over ROS 2 at 640x480.
 - [Troubleshooting](#troubleshooting)
 - [What this project shows](#what-this-project-shows)
 - [Limitations and next steps](#limitations-and-next-steps)
+- [Related project](#related-project)
 - [Acknowledgements](#acknowledgements)
 - [License](#license)
 
@@ -67,6 +68,12 @@ flowchart LR
 ```
 
 The range sensor is mounted 4 cm above the base link origin. Its five-ray scan has a 0.4 rad field of view and 1.5 m maximum range. The static transform is launched separately because the range link is present in the Gazebo model but not the URDF used by `robot_state_publisher`.
+
+![Side view of the robot, the LiDAR scan plane and the low box](docs/images/sensor-geometry.svg)
+
+*Side view, not to scale. The LiDAR plane passes over the box, but the low range sensor does not.*
+
+The design notes in [`docs/how-it-works.md`](docs/how-it-works.md) go through the data path, the frames and the trade-offs.
 
 ## Tested environment
 
@@ -120,21 +127,14 @@ In RViz, set the robot's initial pose, place `models/low_box.sdf` in front of it
 
 ## The obstacle demonstration
 
-The test box is 8 cm tall, below the LiDAR scan plane. With the range layer in both costmaps, the planner routed around it in the recorded run. In the baseline run with stock Nav2 parameters, the robot did not detect it and collided with it. Recordings of both runs are linked at the top of this README.
+The test obstacle is an 8 cm box (`models/low_box.sdf`), short enough that the LiDAR scan passes straight over it. I ran two trips with a goal on the far side of the box:
 
-The [Drive folder](https://drive.google.com/drive/folders/1_qsFUcDb3oPudGYDkgD9RKODOBYeF5Z4?usp=sharing) also contains the box-detection and colour-following videos. The procedure describes how to repeat the navigation test with the same start pose, goal, and box position. The original navigation recordings do not establish that these positions were identical, so treat that comparison as a demonstration rather than a controlled experiment.
+1. **Stock Nav2 parameters (LiDAR only).** The box never appeared in the costmap, so the planner drew a path straight through it and the robot drove into it.
+2. **With the range sensor layer.** The box showed up in both costmaps and the planner routed around it.
 
-## Colour-box perception and following
+Recordings of both runs are in the [demo folder](https://drive.google.com/drive/folders/1_qsFUcDb3oPudGYDkgD9RKODOBYeF5Z4?usp=sharing).
 
-The perception add-on processes the resized camera stream with OpenCV HSV colour masks, contour filtering, and the camera intrinsics. It reports bearing from the box's image position and estimates distance from its known 30 cm height. A separate proportional controller can turn toward a selected red, green, or blue box and approach it.
-
-In the supplied Gazebo comparisons, bearing error was under 1 degree for fully visible boxes at 1.5 to 4 m (most readings were within 0.5 degrees). Height-based distance estimates were within a few centimetres at 1 to 4 m. The follower stopped at roughly 0.475 to 0.479 m in the recorded approaches. These are simulation results, not measurements from a physical robot.
-
-![Gazebo scene with the TurtleBot3, three coloured boxes, and the follower reporting that it arrived](docs/images/perception_following.png)
-
-*Gazebo view of the coloured test boxes and the follower's terminal status.*
-
-See [`perception/README.md`](perception/README.md) for setup commands, topics, detailed results, and limitations.
+This is a demonstration, not a controlled experiment. I don't have a record showing that the start pose, goal and box position were identical in both runs, so I wouldn't quote it as a measured improvement. The [setup guide](docs/setup.md#7-run-the-demonstration) describes how to repeat the comparison with fixed positions.
 
 ## Repository layout
 
@@ -165,6 +165,7 @@ See [`perception/README.md`](perception/README.md) for setup commands, topics, d
     ├── configure_camera.py         Reduce camera resolution and rate in model.sdf
     ├── add_range_sensor.py         Insert the range sensor into model.sdf
     ├── add_range_layer.py          Add the range layer to a Nav2 params file
+    ├── check_range_layer.py        Check the range layer is in both costmaps
     ├── map_to_gazebo.py            Convert map coordinates to Gazebo coordinates
     ├── grab_frame.py               Save a camera frame and print pixel statistics
     └── clean_gz.sh                 Stop stale Gazebo/ROS processes before launching
@@ -197,6 +198,10 @@ See [`docs/troubleshooting.md`](docs/troubleshooting.md) for the fixes and comma
 - The demonstration covers one world and obstacle layout and is not a statistical benchmark.
 - The perception pipeline is colour-based and tuned to static simulation lighting; similarly coloured objects can be mistaken for the test targets.
 - The follower drives directly toward a target and does not avoid obstacles. Connecting its detections to Nav2 is a next step, along with repeating the navigation test in Isaac Sim.
+
+## Related project
+
+This builds on my [TurtleBot3 + Nav2 demo](https://github.com/shreyas02005-sudo/tb3_nav2_demo), which has the custom three-room Gazebo world and the Cartographer map I used as the test environment.
 
 ## Acknowledgements
 
