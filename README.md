@@ -141,6 +141,21 @@ Recordings of both runs are in the [demo folder](https://drive.google.com/drive/
 
 This is a demonstration, not a controlled experiment. I don't have a record showing that the start pose, goal and box position were identical in both runs, so I wouldn't quote it as a measured improvement. The [setup guide](docs/setup.md#7-run-the-demonstration) describes how to repeat the comparison with fixed positions.
 
+## Colour-box perception and following
+
+Once the camera feed worked, I used it for a small perception demo. A detector looks for red, green and blue boxes in the image, and a follower drives the robot toward whichever colour you pick.
+
+| Piece | File | What it does |
+|-------|------|--------------|
+| Spawner | `perception/spawn_boxes.sh` | Spawns the coloured test boxes in Gazebo |
+| Detector | `perception/color_detector.py` | Finds the boxes with HSV colour masks and estimates each one's bearing and distance, published on `/perception/detections` |
+| Follower | `perception/color_follower.py` | Drives toward the selected colour with a simple velocity controller |
+| Check | `perception/expected_bearing.py` | Compares the detector's bearing with Gazebo ground truth |
+
+![Screenshot from the colour-box perception demo](docs/images/perception_following.png)
+
+The follower drives straight at its target and doesn't avoid obstacles, so it doesn't use Nav2. The detector is tuned to the simulation's fixed lighting, and a similarly coloured object could be mistaken for a target. Usage and measured results are in [`perception/README.md`](perception/README.md).
+
 ## Repository layout
 
 ```text

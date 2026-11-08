@@ -68,3 +68,9 @@ With stock parameters, the robot didn't see the box and collided with it. With t
 - One world and one obstacle layout were tested.
 
 See the README for next steps.
+
+## Perception
+
+The camera also feeds a small colour-based perception demo, kept in [`perception/`](../perception). A detector finds red, green and blue boxes using HSV colour masks and the camera's geometry, and publishes each one's estimated bearing and distance. A follower then drives toward the colour you choose.
+
+It's deliberately simple. The follower goes straight at its target and doesn't use Nav2, so it doesn't avoid obstacles, and the detector is tuned to the simulation's fixed lighting. Connecting the detections to Nav2 goals is the obvious next step. Usage and measured results are in [`perception/README.md`](../perception/README.md).
