@@ -6,6 +6,10 @@ The supplied test boxes are static 20 x 20 x 30 cm models. The detector assumes 
 
 ![Gazebo camera feed used by the perception pipeline](../docs/images/nav2_camera.jpeg)
 
+![Gazebo view of the TurtleBot3 with the three colour test boxes while the follower reports arrival](../docs/images/perception_following.png)
+
+*The simulation view shows the red, green, and blue test boxes and the follower status in the terminal.*
+
 ## What is included
 
 | File | Purpose |

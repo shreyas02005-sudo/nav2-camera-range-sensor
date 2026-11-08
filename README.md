@@ -130,7 +130,11 @@ The perception add-on processes the resized camera stream with OpenCV HSV colour
 
 In the supplied Gazebo comparisons, bearing error was under 1 degree for fully visible boxes at 1.5 to 4 m (most readings were within 0.5 degrees). Height-based distance estimates were within a few centimetres at 1 to 4 m. The follower stopped at roughly 0.475 to 0.479 m in the recorded approaches. These are simulation results, not measurements from a physical robot.
 
-See [`perception/README.md`](perception/README.md) for setup commands, topics, detailed results, and limitations. The existing camera image above is the camera feed used by the perception pipeline.
+![Gazebo scene with the TurtleBot3, three coloured boxes, and the follower reporting that it arrived](docs/images/perception_following.png)
+
+*Gazebo view of the coloured test boxes and the follower's terminal status.*
+
+See [`perception/README.md`](perception/README.md) for setup commands, topics, detailed results, and limitations.
 
 ## Repository layout
 
@@ -141,7 +145,7 @@ See [`perception/README.md`](perception/README.md) for setup commands, topics, d
 ├── docs/
 │   ├── setup.md                    Step-by-step reproduction guide
 │   ├── troubleshooting.md          Common issues and fixes
-│   └── images/                     README screenshots
+│   └── images/                     Camera and perception screenshots
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                  Python and shell syntax checks
