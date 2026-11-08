@@ -7,6 +7,7 @@
 ![Platform](https://img.shields.io/badge/Ubuntu-22.04%20%7C%20WSL2-E95420)
 ![License](https://img.shields.io/badge/License-MIT-green)
 [![CI](https://github.com/shreyas02005-sudo/nav2-camera-range-sensor/actions/workflows/ci.yml/badge.svg)](https://github.com/shreyas02005-sudo/nav2-camera-range-sensor/actions/workflows/ci.yml)
+![Params patch](https://github.com/shreyas02005-sudo/nav2-camera-range-sensor/actions/workflows/params-patch.yml/badge.svg)
 
 I added a camera and a low-mounted range sensor to a TurtleBot3 Waffle in Gazebo Classic, connected the range sensor to Nav2's costmaps, and built a colour-based perception demo that detects and follows simulated boxes.
 
